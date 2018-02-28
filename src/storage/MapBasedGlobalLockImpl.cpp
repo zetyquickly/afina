@@ -6,7 +6,6 @@
 namespace Afina {
 namespace Backend {
 
-// Pop tail element
 
 // See MapBasedGlobalLockImpl.h
 bool MapBasedGlobalLockImpl::Put(const std::string &key, const std::string &value) {
@@ -18,7 +17,7 @@ bool MapBasedGlobalLockImpl::Put(const std::string &key, const std::string &valu
     while (_max_size - _cur_size < len) {
         Delete(tail->_key);
     }
-    std::map<std::string, Entry *>::iterator got = _backend.find(key);
+    std::map<str, Entry *>::iterator got = _backend.find(key);
     if (got == _backend.end()) {
         Entry *entry = new Entry(key, value, head, nullptr);
         if (tail == nullptr) {
@@ -28,7 +27,7 @@ bool MapBasedGlobalLockImpl::Put(const std::string &key, const std::string &valu
         if (head != tail) {
             head->_next->_prev = head;
         }
-        _backend.insert(std::pair<std::string, Entry *>(key, entry));
+        _backend.insert(std::pair<str, Entry *>(entry->_key, entry));
     } else {
         got->second->_value = value;
         if (got->second != head) {
@@ -55,7 +54,7 @@ bool MapBasedGlobalLockImpl::PutIfAbsent(const std::string &key, const std::stri
     if (len > _max_size) {
         return false;
     }
-    std::map<std::string, Entry *>::iterator got = _backend.find(key);
+    std::map<str, Entry *>::iterator got = _backend.find(key);
     if (got == _backend.end()) {
         while (_max_size - _cur_size < len) {
             Delete(tail->_key);
@@ -68,7 +67,7 @@ bool MapBasedGlobalLockImpl::PutIfAbsent(const std::string &key, const std::stri
         if (head != tail) {
             head->_next->_prev = head;
         }
-        _backend.insert(std::pair<std::string, Entry *>(key, entry));
+        _backend.insert(std::pair<str, Entry *>(entry->_key, entry));
     } else {
         return false;
     }
@@ -85,7 +84,7 @@ bool MapBasedGlobalLockImpl::Set(const std::string &key, const std::string &valu
     if (len > _max_size) {
         return false;
     }
-    std::map<std::string, Entry *>::iterator got = _backend.find(key);
+    std::map<str, Entry *>::iterator got = _backend.find(key);
     if (got != _backend.end()) {
         if (got->second != head) {
             if (got->second == tail) {
@@ -113,10 +112,10 @@ bool MapBasedGlobalLockImpl::Set(const std::string &key, const std::string &valu
 
 // See MapBasedGlobalLockImpl.h
 bool MapBasedGlobalLockImpl::Delete(const std::string &key) {
-    std::map<std::string, Entry *>::iterator got = _backend.find(key);
+    std::map<str, Entry *>::iterator got = _backend.find(key);
     size_t len;
     if (got != _backend.end()) {
-        len = got->first.size() + got->second->_value.size();
+        len = key.size() + got->second->_value.size();
         if (head == tail) {
             _backend.erase(got);
             delete got->second;
@@ -148,7 +147,7 @@ bool MapBasedGlobalLockImpl::Delete(const std::string &key) {
 
 // See MapBasedGlobalLockImpl.h
 bool MapBasedGlobalLockImpl::Get(const std::string &key, std::string &value) const {
-    std::map<std::string, Entry *>::const_iterator got = _backend.find(key);
+    std::map<str, Entry *>::const_iterator got = _backend.find(key);
     if (got != _backend.end()) {
         value = got->second->_value;
         if (head = tail) {

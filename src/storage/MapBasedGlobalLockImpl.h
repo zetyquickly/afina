@@ -15,6 +15,7 @@ namespace Backend {
  *
  *
  */
+
 class MapBasedGlobalLockImpl : public Afina::Storage {
 public:
     MapBasedGlobalLockImpl(size_t max_size = 1024, size_t cur_size = 0)
@@ -49,10 +50,10 @@ private:
             : _next(next), _prev(prev), _key(key), _value(value) {}
         ~Entry() {}
     };
-
+    using str = std::string;
     size_t _max_size;
     size_t _cur_size;
-    std::map<std::string, Entry *> _backend;
+    std::map<str, Entry *> _backend;
     Entry mutable *head;
     Entry mutable *tail;
 
