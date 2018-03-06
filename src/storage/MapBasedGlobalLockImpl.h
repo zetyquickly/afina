@@ -4,6 +4,8 @@
 #include <map>
 #include <mutex>
 #include <string>
+#include <functional>
+#include <iostream>
 
 #include <afina/Storage.h>
 
@@ -20,7 +22,11 @@ class MapBasedGlobalLockImpl : public Afina::Storage {
 public:
     MapBasedGlobalLockImpl(size_t max_size = 1024, size_t cur_size = 0)
         : _max_size(max_size), _cur_size(cur_size), head(nullptr), tail(nullptr) {}
-    ~MapBasedGlobalLockImpl() {}
+    ~MapBasedGlobalLockImpl() {
+        for (my_map::iterator it = _backend.begin(); it != _backend.end(); it++) {
+            delete it->second;
+        }
+    }
 
     // Implements Afina::Storage interface
     bool Put(const std::string &key, const std::string &value) override;
@@ -50,12 +56,15 @@ private:
             : _next(next), _prev(prev), _key(key), _value(value) {}
         ~Entry() {}
     };
-    using str = std::string;
+    using str = const std::string;
+    using str_ref = std::reference_wrapper<str>;
+    using my_map = std::map<str_ref, Entry *, std::less<str>>;
     size_t _max_size;
     size_t _cur_size;
-    std::map<str, Entry *> _backend;
+    my_map _backend;
     Entry mutable *head;
     Entry mutable *tail;
+    std::recursive_mutex mutable mut;
 
 };
 

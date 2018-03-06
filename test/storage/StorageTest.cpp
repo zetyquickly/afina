@@ -15,7 +15,19 @@ using namespace Afina::Backend;
 using namespace Afina::Execute;
 using namespace std;
 
-TEST(StorageTest, MyTest) {
+TEST (StorageTest, Deletion) {
+    MapBasedGlobalLockImpl storage;
+
+    storage.Put("KEY1", "val1");
+    storage.Put("KEY2", "val2");
+    storage.Delete("KEY1"); 
+    storage.Delete("KEY2");
+    storage.Put("KEY3", "val3");
+    // add output to Entry destructor
+}
+
+
+TEST(StorageTest, MyTest1) {
     MapBasedGlobalLockImpl storage;
 
     storage.Put("KEY1", "val1");
@@ -25,8 +37,9 @@ TEST(StorageTest, MyTest) {
     EXPECT_TRUE(storage.Delete("KEY1")); 
     EXPECT_TRUE(storage.Delete("KEY2"));
     EXPECT_FALSE(storage.Get("KEY1", value));
-    EXPECT_TRUE(storage.PutIfAbsent("KEY2", "SALAM"));
-    EXPECT_FALSE(storage.PutIfAbsent("KEY2", "SALAM/2"));
+    std::string key2 = "KEY2";
+    EXPECT_TRUE(storage.PutIfAbsent(key2, "SALAM"));
+    EXPECT_TRUE(storage.Put(key2, "SALAM/2"));
     EXPECT_FALSE(storage.Get("KEY1", value));
     EXPECT_TRUE(storage.Get("KEY2", value));
     EXPECT_TRUE(storage.Delete("KEY2"));
@@ -37,6 +50,15 @@ TEST(StorageTest, MyTest) {
     EXPECT_TRUE(storage.Get("KEY3", value));
     std::cout << value << std::endl;
 
+}
+
+TEST(StorageTest, MyTest2) {
+    MapBasedGlobalLockImpl storage;
+
+    std::string key1 = "key";
+    std::string value1 = "value";
+
+    EXPECT_TRUE(storage.PutIfAbsent(key1, value1));
 }
 
 TEST(StorageTest, PutGet) {
