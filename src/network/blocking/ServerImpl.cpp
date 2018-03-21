@@ -64,7 +64,7 @@ void ServerImpl::Start(uint16_t port, uint16_t n_workers) {
     // variable value visibility
     listen_port = port;
     // Creating a pool of threads of at least n_workers threads
-    _thread_pool.Start(n_workers, 10, 20, 10);
+    _thread_pool.Start(4, n_workers, 20, 10);
     // The pthread_create function creates a new thread.
     //
     // The first parameter is a pointer to a pthread_t variable, which we can use
