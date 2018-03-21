@@ -55,6 +55,7 @@ bool MapBasedGlobalLockImpl::PutIfAbsent(const std::string &key, const std::stri
         return false;
     }
     _cur_size += len;
+    std::cout<<"HEAD:"<<head<<std::endl;
     mut.unlock();
     return true;
 }
@@ -75,6 +76,7 @@ bool MapBasedGlobalLockImpl::Set(const std::string &key, const std::string &valu
     my_map::iterator got = _backend.find(key);
     // if the key is already in map rewrite entry's value field
     if (got != _backend.end()) {
+        std::cout<<"HEAD:"<<head<<std::endl;
         // at first place the entry to the front
         if (got->second != head) {
             if (got->second == tail) {
@@ -152,7 +154,7 @@ bool MapBasedGlobalLockImpl::Get(const std::string &key, std::string &value) con
     // if there's the key then place it to the front and write the value of entry to value parameter
     if (got != _backend.end()) {
         value = got->second->_value;
-        if (head = tail) {
+        if (head == tail) {
             mut.unlock();
             return true;
         }
