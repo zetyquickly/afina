@@ -3,15 +3,17 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <iostream>
 #include <mutex>
 #include <pthread.h>
 #include <unordered_set>
+#include <iostream>
 
-#include "./../../core/ThreadPool.h"
+#include <afina/network/Server.h>
 #include "./../../protocol/Parser.h"
 #include <afina/execute/Command.h>
-#include <afina/network/Server.h>
+#include "./../../core/ThreadPool.h"
+
+#include "./../../core/Debug.h"
 
 namespace Afina {
 namespace Network {
@@ -35,57 +37,55 @@ public:
     // See Server.h
     void Join() override;
 
-    ServerImpl(const ServerImpl &) = delete;
-    ServerImpl &operator=(const ServerImpl &) = delete;
+    ServerImpl(const ServerImpl&) = delete;
+    ServerImpl& operator=(const ServerImpl&) = delete;
 
 protected:
     /**
      * Method is running in the connection acceptor thread
-     * Int parameter is ignored (for compatibly with RunMethodInDifferentThread function)
+	 * Int parameter is ignored (for compatibly with RunMethodInDifferentThread function)
      */
-    void RunAcceptor(int socket = 0);
+    void RunAcceptor();
 
     /**
      * Methos is running for each connection
      */
-    void RunConnection(int client_socket = 0);
+	void RunConnection(int client_socket = 0);
 
 private:
-    struct ThreadParams {
-        ServerImpl *server;
-        int parameter;
+    //Function for pthread_create. pthread_create gets this pointer as parameter
+    //and then this function calls RunAcceptor()/RunConnectionProxy
+    //Template argument - pointer to function-member, that should be started
+    //void* parameter should be ServerImpl pointer (this) 
+    template <void (ServerImpl::*function_for_start)()>
+    static void *RunMethodInDifferentThread(void* p)
+	{
+		ServerImpl* server = reinterpret_cast<ServerImpl*>(p);
+		try //! For exceptions in threads !
+		{ 
+			(server->*function_for_start)();
+		}
+		catch (std::runtime_error& ex)
+		{
+			std::cerr << "Server fails: " << ex.what() << std::endl;
+		}
+	
+		return 0;
+	}
 
-        ThreadParams(ServerImpl *srv, int param) : server(srv), parameter(param) {}
-    };
-
-    // Function for pthread_create. pthread_create gets this pointer as parameter
-    // and then this function calls RunAcceptor()/RunConnectionProxy
-    // Template argument - pointer to function-member, that should be started
-    // void* parameter should be ThreadParams structure, created with new (delete will be called by this function)
-    template <void (ServerImpl::*function_for_start)(int)> static void *RunMethodInDifferentThread(void *p) {
-        ThreadParams *params = reinterpret_cast<ThreadParams *>(p);
-        try { //! For exceptions in threads !
-            (params->server->*function_for_start)(params->parameter);
-        } catch (std::runtime_error &ex) {
-            std::cerr << "Server fails: " << ex.what() << std::endl;
-        }
-        delete params;
-        return 0;
-    }
-
-    // Type for transporting client socket num to funcions
+    //Type for transporting client socket num to funcions
     // Atomic flag to notify threads when it is time to stop. Note that
     // flag must be atomic in order to safely publish changes cross thread
     // bounds
     std::atomic<bool> running;
-    // atomic to differentiate accept() fails
+    //atomic to differentiate accept() fails
     std::atomic<bool> _is_finishing;
 
     // Thread that is accepting new connections
     pthread_t accept_thread;
 
-    // Server socket
-    int _server_socket;
+	// Server socket
+	int _server_socket;
 
     // Port to listen for new connections, permits access only from
     // inside of accept_thread
@@ -100,12 +100,9 @@ private:
     std::condition_variable connections_cv;
 
     // Treadpool for new threads
-    Core::ThreadPool _thread_pool;
-    // Client sockets
-    std::unordered_set<int> _client_sockets;
-
-    // Maximal count of clients to socket in listen() function
-    static const int _max_listen = 5;
+	Core::ThreadPool _thread_pool;
+	// Client sockets
+	std::unordered_set<int> _client_sockets;
 };
 
 } // namespace Blocking
