@@ -101,6 +101,7 @@ int main(int argc, char **argv) {
 	// Init FIFO
 	std::string reading_fifo_name;
 	std::string writing_fifo_name;
+    std::cout << "EEE";
 	if (options.count("read") > 0) {
 		app.fifo = std::make_shared<Afina::FIFONamespace::FIFOServer>(app.storage);
 		reading_fifo_name = options["read"].as<std::string>();

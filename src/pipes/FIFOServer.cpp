@@ -14,6 +14,7 @@ FIFOServer::~FIFOServer()
 void FIFOServer::Start(const std::string& reading_name, const std::string& writing_name)
 {
 	if (_is_running || _is_stopping) { return; }
+	std::cout << "FIFO started" << std::endl;
 	_reading_fifo.Create(reading_name, true);
 	if (writing_name != "") {
 		_writing_fifo.Create(writing_name, false);
